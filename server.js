@@ -1,58 +1,50 @@
-// Creating new todos
-
 var express = require('express');
-
-// It is an express middleware
-var bodyParser = require('body-parser');
-
 var app = express();
-var PORT = process.env.PORT || 3000;
-var todos = [];
-var todoNextId = 1; 
 
-// It is a middleware and we are using it
+var bodyParser = require('body-parser');
+var PORT = process.env.PORT || 3000;
+var _ = require('underscore');
+var todos = [];
+var todoNextId = 1;
+
 app.use(bodyParser.json());
 
-
-app.get('/', function (req, res) {
+app.get('/', function (req, res){
 	res.send('Todo API Root');
 });
 
 app.get('/todos', function (req, res){
+
 	res.json(todos);
 });
 
 app.get('/todos/:id', function (req, res){
 
 	var todoId = parseInt(req.params.id);
-	var matchedTodo;
+	var matchedTodo = _.findWhere(todos, {id: todoId});
 
-	todos.forEach(function(todo){
-		if(todo.id === todoId){
-			matchedTodo = todo;
-		}
-	});
-
-	if(matchedTodo){
-		res.json(matchedTodo);
-	}else{
-		res.status(404).send();
-	}
+	res.json(matchedTodo);
 
 });
 
-// POST /todos
-// post can take data with the request
-// npm install body-parser@1.13.3 --save
-app.post('/todos', function (req, res){
+app.post('/todos', function(req, res){
 
-	var body = req.body;
-	body.id = todoNextId;
-	todoNextId++;
+	// Use _.pick to only pick description and completed
+	// and leave all extra data
+	var body = _.pick(req.body, 'description', 'completed');
+
+	if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+		return res.status(400).send();
+	}
+
+	// set body.description to trimmed value
+	body.description = body.description.trim();
+
+	body.id = todoNextId++;
 	todos.push(body);
 	res.json(body);
 });
 
 app.listen(PORT, function(){
-	console.log('Server Running!');
+	console.log('Server running! ');
 });
