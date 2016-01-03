@@ -1,4 +1,4 @@
-// Update the todos
+// 12. Searching by todo description
 
 var express = require('express');
 var app = express();
@@ -16,6 +16,8 @@ app.get('/', function(req, res){
 });
 
 // Querying on completed tasks
+// GET /todos/completed=true&q=work
+// GET /todos/completed=false&q=work
 app.get('/todos', function(req, res){
 
 	var queryParams = req.query;
@@ -25,9 +27,17 @@ app.get('/todos', function(req, res){
 
 	// if hasOwnproperty && completed === true
 	if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'true'){
-		filteredTodos = _.where(filteredtodos, {completed: true});
+		filteredTodos = _.where(filteredTodos, {completed: true});
 	}else if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'false'){
-		filteredtodos = _.where(filteredtodos, {completed: false});
+		filteredTodos = _.where(filteredTodos, {completed: false});
+	}
+
+	//_.filter takes array and function (that returns true or false)
+	// toLowerCase because w and W were not querying the same. 
+	if(queryParams.hasOwnProperty('q') && queryParams.q.trim().length > 0){
+		filteredTodos = _.filter(filteredTodos, function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+		});
 	}
 
 	res.json(filteredTodos);
@@ -86,7 +96,7 @@ app.put('/todos/:id', function(req, res){
 	var body = _.pick(req.body, 'completed');
 	var validAttributes = {};
 
-	if(_.isBoolean(body.completed)){
+	if(_.isBoolean(body.completed) && body.hasOwnproperty(completed)){
 		validAttributes.completed = body.completed;
 	}else{
 		return res.status(400);
