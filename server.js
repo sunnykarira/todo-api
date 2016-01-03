@@ -36,7 +36,7 @@ app.get('/todos', function(req, res){
 	// toLowerCase because w and W were not querying the same. 
 	if(queryParams.hasOwnProperty('q') && queryParams.q.trim().length > 0){
 		filteredTodos = _.filter(filteredTodos, function(todo) {
-			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+				return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
 		});
 	}
 
@@ -46,12 +46,6 @@ app.get('/todos', function(req, res){
 app.get('/todos/:id', function(req, res){
 	var todoId = parseInt(req.params.id);
 	var matchedTodo = _.findWhere(todos, {id: todoId});
-
-	// todos.forEach(function(todo){
-	// 	if(todoId = todo.id){
-	// 		matchedTodo = todo;
-	// 	}
-	// });
 
 	if(!matchedTodo){
 		return res.status(404).send({"error" : "todo not found"});
