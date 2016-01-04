@@ -24,13 +24,13 @@ app.get('/todos', function(req, res) {
 	var query = req.query;
 	var where = {};
 
-	if(query.hasOwnProperty('completed') && query.completed === 'true'){
+	if (query.hasOwnProperty('completed') && query.completed === 'true') {
 		where.completed = true;
-	}else if(query.hasOwnProperty('completed') && query.completed === 'false'){
+	} else if (query.hasOwnProperty('completed') && query.completed === 'false') {
 		where.completed = false;
 	}
 
-	if(query.hasOwnProperty('q') && query.q.length > 0){
+	if (query.hasOwnProperty('q') && query.q.length > 0) {
 		where.description = {
 			$like: "%" + query.q + "%"
 		}
@@ -38,10 +38,10 @@ app.get('/todos', function(req, res) {
 
 	db.todo.findAll({
 		where: where
-	}).then(function(todos){
+	}).then(function(todos) {
 
 		res.json(todos);
-	}).catch(function(e){
+	}).catch(function(e) {
 		res.status(500).send();
 	});
 });
@@ -50,7 +50,7 @@ app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id);
 
 	// Query via db
-	db.todo.findById(todoId).then(function(todo){
+	db.todo.findById(todoId).then(function(todo) {
 		// Converting an object to true or false
 		if (!!todo) {
 			res.json(todo.toJSON());
@@ -70,13 +70,15 @@ app.delete('/todos/:id', function(req, res) {
 
 	var todoId = parseInt(req.params.id);
 	db.todo.destroy({
-		where:{
+		where: {
 			id: todoId
 		}
-	}).then(function(rowsDeleted){
-		if(rowsDeleted === 0){
-			res.status(404).json({"error": "todo not found with id"});
-		}else{
+	}).then(function(rowsDeleted) {
+		if (rowsDeleted === 0) {
+			res.status(404).json({
+				"error": "todo not found with id"
+			});
+		} else {
 			// Everything went well and nothing  (data) is coming back
 			res.status(204).send();
 		}
@@ -108,22 +110,36 @@ app.post('/todos', function(req, res) {
 app.put('/todos/:id', function(req, res) {
 
 	var todoId = parseInt(req.params.id);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
+	var body = _.pick(req.body, 'completed', 'description');
+	var attributes = {};
 
-	var body = _.pick(req.body, 'completed');
-	var validAttributes = {};
-
-	if (_.isBoolean(body.completed) && body.hasOwnproperty(completed)) {
-		validAttributes.completed = body.completed;
-	} else {
-		return res.status(400);
+	if (body.hasOwnProperty('completed')) {
+		attributes.completed = body.completed;
 	}
 
+	if (body.hasOwnProperty('description')) {
+		attributes.description = body.description;
+	}
 
-	_.extend(matchedTodo, validAttributes);
-	res.json(matchedTodo);
+	// Instance method is put on model methods
+	// So first we need to fetch data and then update it
+
+	db.todo.findById(todoId).then(function(todo) {
+
+		if (todo) {
+			todo.update(attributes).then(function(todo) {
+
+				res.json(todo.toJSON());
+			}, function(e) {
+				res.status(400).json(e);
+			});
+		} else {
+			return res.status(404).send();
+		}
+	}, function() {
+		res.status(500).send();
+	});
+
 });
 
 db.sequelize.sync().then(function() {
