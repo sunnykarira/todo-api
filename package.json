@@ -8,12 +8,15 @@
   },
   "author": "sunnykarira",
   "license": "ISC",
+  "engines": {
+    "node": "4.1.1"
+  },
   "dependencies": {
     "express": "~4.13.3",
     "body-parser": "~1.13.3",
     "underscore": "~1.8.3",
     "sequelize": "~3.5.1",
-    "sqlite3": "~3.0.10",
+    
     "pg": "~4.4.1",
     "pg-hstore": "~2.3.2"
   }
