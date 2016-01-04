@@ -50,17 +50,22 @@ app.get('/todos', function(req, res) {
 
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
+
+	// Query via db
+	db.todo.findById(todoId).then(function(todo){
+		// Converting an object to true or false
+		if (!!todo) {
+			res.json(todo.toJSON());
+		} else {
+			res.status(400).json({
+				"error": "No todo found at this id"
+			});
+		}
+	}).catch(function(e) {
+		// Internal sever error
+		res.send(500).send();
 	});
 
-	if (!matchedTodo) {
-		return res.status(404).send({
-			"error": "todo not found"
-		});
-	}
-
-	res.json(matchedTodo);
 });
 
 app.delete('/todos/:id', function(req, res) {
@@ -84,17 +89,6 @@ app.post('/todos', function(req, res) {
 
 	var body = _.pick(req.body, 'description', 'completed');
 
-	// if (!_.isString(body.description) && !_.isBoolean(body.completed) && body.description.trim().length === 0) {
-	// 	return res.status(400).send({
-	// 		"error": "invalid request"
-	// 	});
-	// }
-
-	// body.description = body.description.trim();
-	// body.id = todoNextId++;
-	// todos.push(body);
-	// res.json(body);
-
 	// call create on db.todo
 	// respond to api caller 
 	// e
@@ -102,12 +96,12 @@ app.post('/todos', function(req, res) {
 	db.todo.create({
 		description: body.description,
 		completed: body.completed
-	}).then(function(todo){
+	}).then(function(todo) {
 		res.json(todo.toJSON());
 
-	}).catch(function(e){
+	}).catch(function(e) {
 		res.status(400).json(e);
-	});	
+	});
 
 });
 
