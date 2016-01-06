@@ -23,6 +23,8 @@ var db = {};
 
 // Lets you load models from external files
 db.todo = sequelize.import(__dirname + '/models/todo.js');
+// Takes in file path.
+db.user = sequelize.import(__dirname + '/models/user.js');
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
