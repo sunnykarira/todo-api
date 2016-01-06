@@ -151,13 +151,14 @@ app.post('/users', function(req, res){
 		email: body.email,
 		password: body.password
 	}).then(function(user){
-		res.json(user.toJSON());
+
+		res.json(user.toPublicJSON());
 	}).catch(function(e){
 		res.status(400).json(e);
 	});
 });
 
-db.sequelize.sync().then(function() {
+db.sequelize.sync({force: true}).then(function() {
 
 	// Server will start in db
 	// after db starts server will start
