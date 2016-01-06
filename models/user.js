@@ -18,6 +18,22 @@ module.exports = function (sequelize, DataTypes) {
  			len: [7, 100] // See validate RE (document)
  		}
  	}
+ }, {
+
+ 	hooks: {
+ 		beforeValidate: function(user, options){
+
+ 			if(typeof user.email === 'string'){
+ 				user.email = user.email.toLowerCase();
+ 			}
+ 		}
+ 	}
  });
 
 };
+
+
+
+// Sequelize Hooks
+// It lets you run a code before or after an event has happened.
+// Just like triggers.
