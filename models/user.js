@@ -1,9 +1,10 @@
 var bcrypt = require('bcrypt');
 var _ = require('underscore');
+var Promise = require('promise');
 
 module.exports = function(sequelize, DataTypes) {
 
-	return sequelize.define('user', {
+	return user = sequelize.define('user', {
 		email: {
 			type: DataTypes.STRING,
 			allowNull: false,
@@ -44,7 +45,9 @@ module.exports = function(sequelize, DataTypes) {
 			}
 		}
 	}, {
-
+		// Sequelize Hooks
+		// It lets you run a code before or after an event has happened.
+		// Just like triggers.
 		hooks: {
 			beforeValidate: function(user, options) {
 
@@ -54,15 +57,46 @@ module.exports = function(sequelize, DataTypes) {
 			}
 		},
 
-		// Sequelize Hooks
-		// It lets you run a code before or after an event has happened.
-		// Just like triggers.
 		instanceMethods: {
 			toPublicJSON: function() {
 				var json = this.toJSON();
 				return _.pick(json, 'id', 'email', 'updatedAt', 'createdAt');
 			}
-		}
-	});
+		},
+		classMethods: {
+			authenticate: function(body) {
 
+				return new Promise(function(resolve, reject) {
+
+					if (typeof body.email === 'string' && typeof body.password === 'string') {
+
+						user.findOne({
+							where: {
+								email: body.email
+							}
+						}).then(function(user) {
+							if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+								// 401 Authentivation exist but fail
+								return reject();
+							}
+
+							// Password Validation in callback now
+							// compareSync takes two arguments.
+							// Passed in password and hash
+							resolve(user);
+							//res.json(user.toPublicJSON());
+
+						}, function(e) {
+							reject();
+						});
+
+					} else {
+						return reject();
+					}
+				});
+			}
+		}
+		});
+
+return user;
 };
