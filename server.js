@@ -1,5 +1,3 @@
-// 8.4 POST todos
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
@@ -147,14 +145,14 @@ app.put('/todos/:id', function(req, res) {
 app.post('/users', function(req, res){
 
 	var body = _.pick(req.body, 'email', 'password');
-	
+
 	db.user.create({
 		email: body.email,
 		password: body.password
-	}).then(function(user){
+	}).then(function(user) {
 
 		res.json(user.toPublicJSON());
-	}).catch(function(e){
+	}).catch(function(e) {
 		res.status(400).json(e);
 	});
 });
@@ -162,16 +160,23 @@ app.post('/users', function(req, res){
 
 // POST /users/login
 
-app.post('/users/login', function(req, res){
+app.post('/users/login', function(req, res) {
 	var body = _.pick(req.body, 'email', 'password');
 
 
 	// Converting long route into autheticate function
-	db.user.authenticate(body).then(function (user){
+	db.user.authenticate(body).then(function(user) {
 
-		res.json(user.toPublicJSON());
+		var token = user.generateToken('authentication');
 
-	}, function(){
+		if (token) {
+			// header takes key and value (generateToken(type))
+			res.header('Auth', token).json(user.toPublicJSON());
+		} else {
+			res.status(401).send();
+
+		}
+	}, function() {
 
 		res.status(401).send();
 	});
@@ -203,7 +208,9 @@ app.post('/users/login', function(req, res){
 	// }
 });
 
-db.sequelize.sync({force: true}).then(function() {
+db.sequelize.sync({
+	force: true
+}).then(function() {
 
 	// Server will start in db
 	// after db starts server will start
