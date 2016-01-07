@@ -67,17 +67,20 @@ module.exports = function(sequelize, DataTypes) {
 
 			// Creating a token so that user can make multiple
 			// request
-			generateToken: function(type){
+			generateToken: function(type) {
 				// Checking if type is a string
-				if(!_.isString(type)){
+				if (!_.isString(type)) {
 					return undefined;
 				}
 
 				// try catch if anything goes wrong
-				try{
+				try {
 
 					// Converting into string bcs AES encrypt string data
-					var stringData = JSON.stringify({ id: this.get('id'), type: type});
+					var stringData = JSON.stringify({
+						id: this.get('id'),
+						type: type
+					});
 					// encrypt take 2 arguments data and key	
 					var encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!').toString();
 
@@ -88,7 +91,7 @@ module.exports = function(sequelize, DataTypes) {
 					}, 'qwerty098');
 
 					return token;
-				}catch(e){
+				} catch (e) {
 					return undefined;
 				}
 			}
@@ -124,9 +127,34 @@ module.exports = function(sequelize, DataTypes) {
 						return reject();
 					}
 				});
+			},
+
+			// Custom function for middleware.requireAuthentication
+			findByToken: function(token) {
+				return new Promise(function(resolve, reject) {
+
+					try {
+						var decodedJWT = jwt.verify(token, 'qwerty098');
+						var bytes = cryptojs.AES.decrypt(decodedJWT.token, 'abc123!');
+						var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+						user.findById(tokenData.id).then(function(user) {
+
+							if (!user) {
+								reject();
+							}
+
+							resolve(user);
+						}, function(e) {
+							reject();
+						})
+					} catch (e) {
+						reject();
+					}
+				});
 			}
 		}
-		});
+	});
 
-return user;
+	return user;
 };

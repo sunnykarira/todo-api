@@ -2,6 +2,8 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
+var middleware = require('./middleware.js')(db);
+// Because we need to pass in database
 var bcrypt = require('bcrypt');
 
 var app = express();
@@ -18,7 +20,7 @@ app.get('/', function(req, res) {
 // Querying on completed tasks
 // GET /todos/completed=true&q=work
 // GET /todos/completed=false&q=work
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication ,function(req, res) {
 
 	var query = req.query;
 	var where = {};
@@ -45,7 +47,7 @@ app.get('/todos', function(req, res) {
 	});
 });
 
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
 
 	// Query via db
@@ -65,7 +67,7 @@ app.get('/todos/:id', function(req, res) {
 
 });
 
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 
 	var todoId = parseInt(req.params.id);
 	db.todo.destroy({
@@ -86,7 +88,7 @@ app.delete('/todos/:id', function(req, res) {
 
 });
 
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
 
 	var body = _.pick(req.body, 'description', 'completed');
 
@@ -106,7 +108,7 @@ app.post('/todos', function(req, res) {
 
 });
 
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 
 	var todoId = parseInt(req.params.id);
 	var body = _.pick(req.body, 'completed', 'description');
