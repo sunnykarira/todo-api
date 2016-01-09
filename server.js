@@ -228,7 +228,9 @@ app.post('/users/login', function(req, res) {
 	// }
 });
 
-db.sequelize.sync().then(function() {
+db.sequelize.sync({
+	force: true
+}).then(function() {
 
 	// Server will start in db
 	// after db starts server will start
