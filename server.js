@@ -23,7 +23,7 @@ app.get('/', function(req, res) {
 app.get('/todos', middleware.requireAuthentication ,function(req, res) {
 
 	var query = req.query;
-	var where = {};
+	var where = {}; //req.user.get('id');
 
 	if (query.hasOwnProperty('completed') && query.completed === 'true') {
 		where.completed = true;
@@ -36,6 +36,8 @@ app.get('/todos', middleware.requireAuthentication ,function(req, res) {
 			$like: "%" + query.q + "%"
 		}
 	}
+
+	where.userId = req.user.get('id');
 
 	db.todo.findAll({
 		where: where
@@ -51,7 +53,12 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
 
 	// Query via db
-	db.todo.findById(todoId).then(function(todo) {
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: req.user.get('id')
+		}
+	}).then(function(todo) {
 		// Converting an object to true or false
 		if (!!todo) {
 			res.json(todo.toJSON());
@@ -72,7 +79,8 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id);
 	db.todo.destroy({
 		where: {
-			id: todoId
+			id: todoId,
+			userId: req.user.get('id')
 		}
 	}).then(function(rowsDeleted) {
 		if (rowsDeleted === 0) {
@@ -130,7 +138,12 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	// Instance method is put on model methods
 	// So first we need to fetch data and then update it
 
-	db.todo.findById(todoId).then(function(todo) {
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: req.user.get('id')
+		}
+	}).then(function(todo) {
 
 		if (todo) {
 			todo.update(attributes).then(function(todo) {
@@ -215,9 +228,7 @@ app.post('/users/login', function(req, res) {
 	// }
 });
 
-db.sequelize.sync({
-	force: true
-}).then(function() {
+db.sequelize.sync().then(function() {
 
 	// Server will start in db
 	// after db starts server will start
