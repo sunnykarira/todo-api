@@ -96,11 +96,16 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
 	// respond to api caller 
 	// e
 
-	db.todo.create({
-		description: body.description,
-		completed: body.completed
-	}).then(function(todo) {
-		res.json(todo.toJSON());
+	db.todo.create(body).then(function(todo) {
+		//res.json(todo.toJSON());
+		req.user.addTodo(todo).then(function(){
+
+			// This updates the todo which is on req
+			//and put it in database
+			return todo.reload();
+		}).then(function(todo){
+			res.json(todo.toJSON());
+		});
 
 	}).catch(function(e) {
 		res.status(400).json(e);
