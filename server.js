@@ -14,7 +14,7 @@ var todoNextId = 1;
 app.use(bodyParser.json());
 
 app.get('/', function(req, res) {
-	res.send('Todo API Root');
+	res.send('Todo API Root' + ' A day to day usage app for todos');
 });
 
 // Querying on completed tasks
